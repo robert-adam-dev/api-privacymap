@@ -6,6 +6,9 @@ import co.privacymap.api.model.dto.ClientInputUpdate;
 import co.privacymap.api.model.dto.ClientOutput;
 import co.privacymap.api.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -28,12 +31,18 @@ public class ClientController {
     ClientRepository clientRepository;
 
     @GetMapping
-    public ResponseEntity<List<ClientOutput>> listAllClients(String cpf){
+    public ResponseEntity<Page<ClientOutput>> listAllClients(@RequestParam(required = false) String cpf,
+                                                             @RequestParam int page,
+                                                             @RequestParam int size){
+
+
+        Pageable pageable = PageRequest.of(page, size);
+
         if (cpf == null){
-            List<Client> clientsList = clientRepository.findAll();
+            Page<Client> clientsList = clientRepository.findAll(pageable);
             return ResponseEntity.ok(ClientOutput.converter(clientsList));
         }else{
-            List<Client> clientList = clientRepository.findByCpf(cpf);
+            Page<Client> clientList = clientRepository.findByCpf(cpf, pageable);
             return ResponseEntity.ok(ClientOutput.converter(clientList));
         }
     }
