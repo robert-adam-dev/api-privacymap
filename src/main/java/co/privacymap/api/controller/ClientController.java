@@ -6,9 +6,12 @@ import co.privacymap.api.model.dto.ClientInputUpdate;
 import co.privacymap.api.model.dto.ClientOutput;
 import co.privacymap.api.repository.ClientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,12 +21,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@RestController // Deixa implícito o @ResponseBody
+@RestController
 @RequestMapping(path = "/clients", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ClientController {
 
@@ -31,12 +33,11 @@ public class ClientController {
     ClientRepository clientRepository;
 
     @GetMapping
+    @Cacheable(value = "clientList")
     public ResponseEntity<Page<ClientOutput>> listAllClients(@RequestParam(required = false) String cpf,
-                                                             @RequestParam int page,
-                                                             @RequestParam int size){
-
-
-        Pageable pageable = PageRequest.of(page, size);
+                                                             @PageableDefault(sort = "name",
+                                                                     direction = Sort.Direction.ASC,
+                                                                     size = 10) Pageable pageable){
 
         if (cpf == null){
             Page<Client> clientsList = clientRepository.findAll(pageable);
@@ -57,7 +58,9 @@ public class ClientController {
     }
 
     @PostMapping
-    public ResponseEntity<ClientOutput> createNewClient(@RequestBody @Valid ClientInput client, UriComponentsBuilder uriComponentsBuilder){
+    @CacheEvict(value = "clientList", allEntries = true)
+    public ResponseEntity<ClientOutput> createNewClient(@RequestBody @Valid ClientInput client,
+                                                        UriComponentsBuilder uriComponentsBuilder){
 
         Client newClient = client.converter();
         clientRepository.save(newClient);
@@ -68,7 +71,9 @@ public class ClientController {
 
     @PutMapping("/{id}")
     @Transactional
-    public ResponseEntity<ClientOutput> updateClient(@PathVariable UUID id, @RequestBody @Valid ClientInputUpdate form){
+    @CacheEvict(value = "clientList", allEntries = true)
+    public ResponseEntity<ClientOutput> updateClient(@PathVariable UUID id,
+                                                     @RequestBody @Valid ClientInputUpdate form){
         Optional <Client> foundClient = clientRepository.findById(id);
         if (foundClient.isPresent()){
             Client client = form.update(id, clientRepository);
@@ -79,6 +84,7 @@ public class ClientController {
     }
 
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "clientList", allEntries = true)
     public ResponseEntity removeClient(@PathVariable UUID id){
         Optional <Client> foundClient = clientRepository.findById(id);
         if (foundClient.isPresent()){
