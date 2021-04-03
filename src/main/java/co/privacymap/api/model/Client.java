@@ -41,7 +41,7 @@ public class Client implements Serializable, UserDetails {
 
     private LocalDateTime creationDate = LocalDateTime.now();
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(cascade=CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Profile> proviles = new ArrayList<>();
     public Client() {
     }
