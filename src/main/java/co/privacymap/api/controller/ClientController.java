@@ -62,11 +62,16 @@ public class ClientController {
     public ResponseEntity<ClientOutput> createNewClient(@RequestBody @Valid ClientInput client,
                                                         UriComponentsBuilder uriComponentsBuilder){
 
-        Client newClient = client.converter();
-        clientRepository.save(newClient);
-        URI uri = uriComponentsBuilder.path("/clients/{id}").buildAndExpand(newClient.getId()).toUri();
-        return ResponseEntity.created(uri).body(new ClientOutput(newClient));
+        Optional <Client> clientAlreadyRegistered = clientRepository.findByCpf(client.getCpf());
 
+        if (!clientAlreadyRegistered.isPresent()){
+            Client newClient = client.converter();
+            clientRepository.save(newClient);
+            URI uri = uriComponentsBuilder.path("/clients/{id}").buildAndExpand(newClient.getId()).toUri();
+            return ResponseEntity.created(uri).body(new ClientOutput(newClient));
+        }else{
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
