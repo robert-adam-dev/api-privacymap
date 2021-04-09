@@ -9,6 +9,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ClientRepository extends JpaRepository<Client, UUID> {
-    Page<Client> findByCpf(String cpf, Pageable pageable);
+    Page <Client> findByCpf(String cpf, Pageable pageable);
     Optional <Client> findByCpf(String cpf);
 }

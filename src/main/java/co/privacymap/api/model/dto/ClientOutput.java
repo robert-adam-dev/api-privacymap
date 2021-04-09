@@ -32,4 +32,8 @@ public class ClientOutput {
         return clients.map(ClientOutput::new);
     }
 
+    public static ClientOutput converter(Client client){
+        return new ClientOutput(client);
+    }
+
 }

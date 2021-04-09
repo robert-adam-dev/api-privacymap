@@ -35,26 +35,21 @@ public class ClientController {
     @GetMapping
     @Cacheable(value = "clientList")
     public ResponseEntity<Page<ClientOutput>> listAllClients(@RequestParam(required = false) String cpf,
-                                                             @PageableDefault(sort = "name",
-                                                                     direction = Sort.Direction.ASC,
-                                                                     size = 10) Pageable pageable){
+                                                             @PageableDefault Pageable pageable){
 
         if (cpf == null){
             Page<Client> clientsList = clientRepository.findAll(pageable);
             return ResponseEntity.ok(ClientOutput.converter(clientsList));
         }else{
-            Page<Client> clientList = clientRepository.findByCpf(cpf, pageable);
-            return ResponseEntity.ok(ClientOutput.converter(clientList));
+            Page <Client> client = clientRepository.findByCpf(cpf, pageable);
+            return ResponseEntity.ok(ClientOutput.converter(client));
         }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ClientOutput> findClientById(@PathVariable UUID id){
         Optional <Client> foundClient = clientRepository.findById(id);
-        if (foundClient.isPresent()){
-            return ResponseEntity.ok(new ClientOutput(foundClient.get()));
-        }
-        return ResponseEntity.notFound().build();
+        return foundClient.map(client -> ResponseEntity.ok(new ClientOutput(client))).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
